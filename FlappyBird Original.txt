@@ -1,0 +1,261 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package flappybird;
+
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+/**
+ *
+ * @author courtney
+ */
+public class FlappyBird extends Application implements EventHandler<ActionEvent>{
+    static final int SCREEN_WIDTH = 420;
+    static final int SCREEN_HEIGHT = 600;
+    Label score_label;
+    Button replay_btn;
+    int score = 0;
+    
+    static int bird_y = 200;
+    int pipes_x = 500;
+    int deaths = 0;
+    Timeline animation;
+    
+        ArrayList<ImageView> topPipes = new ArrayList<ImageView>();
+        ArrayList<ImageView> bottomPipes = new ArrayList<ImageView>();
+
+        
+        ImageView top_pipe;
+        ImageView bottom_pipe;
+        ImageView bird;
+        
+    
+    @Override
+    public void start(Stage primaryStage) {
+        //dont show anyting before the background
+          
+       Image image = new Image("bg.png");
+       ImageView background = new ImageView(image);
+       background.setFitHeight(SCREEN_HEIGHT+20);
+       background.setFitWidth(SCREEN_WIDTH+100);
+       
+        
+       Pane root = new Pane();
+       root.setOnMouseClicked(new EventHandler<MouseEvent>(){
+
+           @Override
+           public void handle(MouseEvent event) {
+               
+               
+               //if they click on the screen
+               bird_y-=50;
+               bird.setLayoutY(bird_y);
+               
+           }
+       
+       
+       });
+       
+       
+        score_label = new Label("Score: 0");
+        //resized the score on screen
+        score_label.setScaleX(3);
+        score_label.setScaleY(3);
+        score_label.setLayoutX(210);
+        score_label.setLayoutY(100);
+        score_label.setTextFill(Color.BLACK);
+        
+        
+        replay_btn = new Button("Replay");
+        replay_btn.setLayoutX(180);
+        replay_btn.setLayoutY(300);
+        replay_btn.setOnAction(this);
+        replay_btn.setVisible(false);
+        replay_btn.setOnAction(new EventHandler<ActionEvent>() {
+
+           @Override
+           public void handle(ActionEvent event) {
+               //replay button
+               score = 0;
+                   score_label.setText("Score: "+Integer.toString(score));
+               //resets the location of the pipes
+               pipes_x = 500;
+               bird.setLayoutY(0);
+               
+             
+               bird.setVisible(true);
+               replay_btn.setVisible(false);           
+               animation.play();  
+           }
+            
+        });
+
+        
+        root.getChildren().add(background);//DONT SET ANYTHING TO THE ROOT PANE BEFORE THE BACKGROUND
+       
+       
+       
+       //fill pipes
+        for (int i = 0; i < 200; i++) {         //makes two hundred pipes
+
+            Image top = new Image("top_pipe.png");
+            
+            top_pipe = new ImageView(top);
+            top_pipe.setFitHeight(250);
+            top_pipe.setFitWidth(150);
+            top_pipe.setLayoutX(400);
+            top_pipe.setLayoutY(10);
+
+            topPipes.add(top_pipe);
+            root.getChildren().add(top_pipe);
+            
+                        Image bottom = new Image("bottom_pipe.png");
+
+            bottom_pipe = new ImageView(bottom);
+            bottom_pipe.setFitHeight(350);
+            bottom_pipe.setFitWidth(150);
+            bottom_pipe.setLayoutX(200);
+            bottom_pipe.setLayoutY(300);
+
+            bottomPipes.add(bottom_pipe);
+                        root.getChildren().add(bottom_pipe);
+
+        }
+       
+       
+       
+    
+        
+        
+        
+         Image imageBird = new Image("bird.png");
+       bird = new ImageView(imageBird);
+       bird.setFitHeight(50);
+       bird.setFitWidth(50);
+       bird.setLayoutX(150);
+       bird.setLayoutY(bird_y);
+       root.getChildren().add(bird);
+       
+        Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
+        
+        
+                root.getChildren().add(score_label);
+                root.getChildren().add(replay_btn);
+
+        
+        primaryStage.setTitle("Flappy Bird - Courtney");
+        primaryStage.setResizable(false);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+        
+        
+        
+        
+        KeyFrame keyFrame = new KeyFrame(Duration.millis(10), this);
+        animation = new Timeline(keyFrame);
+        animation.setCycleCount(Timeline.INDEFINITE);
+        animation.play();
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    
+    
+    public void collisionDetection(int index) throws InterruptedException {
+
+        double bird_x_axis = bird.getLayoutX();
+        double bird_y_axis = bird.getLayoutY();
+        double top_pipe_x_axis = topPipes.get(index).getLayoutX();
+        double top_pipe_y_axis = topPipes.get(index).getLayoutY();
+        
+        double bottom_pipe_x_axis = bottomPipes.get(index).getLayoutX();
+        double bottom_pipe_y_axis = bottomPipes.get(index).getLayoutY();
+
+        
+        //sets the score
+        if((top_pipe_x_axis < bird_x_axis) && (top_pipe_x_axis > ( bird.getLayoutX() - 2) )){
+        
+            score++;
+                        
+            //sets the score to the screen
+            score_label.setText("Score: "+Integer.toString(score));
+        }
+        
+        
+        //if you hit a pipe at the top or the bottom
+        if (((bird_y_axis <= topPipes.get(index).getFitHeight()-50 ) && ((bird_x_axis < top_pipe_x_axis+100) && (bird_x_axis >= top_pipe_x_axis)))||
+               ((bird_y_axis > bottomPipes.get(index).getFitHeight() ) && (bird_x_axis >= bottom_pipe_x_axis && bird_x_axis < bottom_pipe_x_axis+100))) {
+
+          //what happens when bird hits pipe ?            
+            deaths++;
+            System.out.println("You died " + deaths + " times.");
+
+          
+            //birdie go bye bye and game stops (pauses)
+            replay_btn.setVisible(true);
+            bird.setVisible(false);
+            animation.pause();
+
+        
+        }
+
+    }
+    
+    @Override
+    public void handle(ActionEvent event) {
+        //AUTOMATIC ANIMATION LOOP
+     
+        
+        
+         if(bird_y <= SCREEN_HEIGHT-150){
+             bird_y+=2;
+         }
+         pipes_x--;
+         
+         bird.setLayoutY(bird_y);
+         
+         //sets the pipes location 
+         for (int i = 0; i < topPipes.size(); i++) {
+             try {
+            collisionDetection(i);
+            
+            
+            
+        } catch (InterruptedException ex) {
+            Logger.getLogger(FlappyBird.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            topPipes.get(i).setLayoutX(pipes_x + (i * 250));
+            bottomPipes.get(i).setLayoutX(pipes_x + (i * 250));
+            
+            
+        }
+        
+    
+    }
+    
+}
